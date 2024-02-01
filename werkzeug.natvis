@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="werkzeug::State_Machine&lt;*&gt;">
+		<DisplayString>current state : {active_state_}</DisplayString>
+	</Type>
+
+
+	<Type Name="werkzeug::optional&lt;*&gt;">
+		<DisplayString Condition="!no.has_value_">{{empty}}</DisplayString>
+		<DisplayString Condition="no.has_value_">{yes.value_}</DisplayString>
+	</Type>
+
+
+	<Type Name="werkzeug::Expected&lt;*,*&gt;">
+		<DisplayString>{data_}</DisplayString>
+	</Type>
+
+
+	<Type Name="werkzeug::basic_dynamic_array_small_buffer&lt;*,*,*,*&gt;">
+		<DisplayString>{{ size : {ss.size_} }}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]" ExcludeView="simple" Condition="$T2==0">block_.size</Item>
+			<Item Name="[capacity]" ExcludeView="simple" Optional="true" Condition="ss.in_buffer_">$T2</Item>
+			<Item Name="[capacity]" ExcludeView="simple" Optional="true" Condition="has_buffer and !ss.in_buffer_">block_.size</Item>
+			<Item Name="[in buffer]" ExcludeView="simple" Optional="true" Condition="has_buffer">ss.in_buffer_</Item>
+			<Item Name="[allocator]" ExcludeView="simple">alloc</Item>
+			<ArrayItems Condition="!ss.in_buffer_" Optional="true">
+				<Size>ss.size_</Size>
+				<ValuePointer>block_.ptr</ValuePointer>
+			</ArrayItems>
+			<ArrayItems Condition="ss.in_buffer_" Optional="true">
+				<Size>ss.size_</Size>
+				<ValuePointer>buffer_</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+
+
+	<Type Name="werkzeug::stack_dynamic_array&lt;*,*&gt;">
+		<DisplayString>{{ size : {end_-storage_.value} }}</DisplayString>
+		<Expand>
+			<Item Name="[capacity]">$T2</Item>
+			<ArrayItems Optional="true">
+				<Size>end_-storage_.value</Size>
+				<ValuePointer>storage_.value</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+
+
+	<Type Name="werkzeug::inheritance_variant&lt;*&gt;">
+		<DisplayString Condition="index_==npos">[empty]</DisplayString>
+		<DisplayString Condition="index_==0">{storage.t1}</DisplayString>
+		<DisplayString Condition="index_==1">{storage.rest.t1}</DisplayString>
+		<DisplayString Condition="index_==2">{storage.rest.rest.t1}</DisplayString>
+		<DisplayString Condition="index_==3">{storage.rest.rest.rest.t1}</DisplayString>
+		<DisplayString Condition="index_==4">{storage.rest.rest.rest.rest.t1}</DisplayString>
+	</Type>
+
+
+	<Type Name="werkzeug::explicit_&lt;*&gt;">
+		<DisplayString>{value_}</DisplayString>
+	</Type>
+
+
+	<Type Name="werkzeug::fixed_string&lt;*&gt;">
+		<DisplayString>{data_,$T1}</DisplayString>
+		<StringView>data_,$T1</StringView>
+	</Type>
+</AutoVisualizer>
