@@ -18,17 +18,17 @@ The library currently provides a simple `CMake` script allowing its in-tree usag
 
 ## Interesting things in here:
 
-* [Expected<T,Errors...>](#Expected<T,Errors...>): A slightly improved alternative to `std::expected`
-* [inheritance_variant<Base, Derived...>](#inheritance_variant<Base,Derived...>): A variant-like sum type 
+* [Expected\<T,Errors...\>](#Expected\<T,Errors...\>): A slightly improved alternative to `std::expected`
+* [inheritance_variant\<Base, Derived...\>](#inheritance_variant\<Base,Derived...\>): A variant-like sum type 
 * [overload](#overload): A tool to easily create overloads from multiple callables
 * [aggregate_ordering](#aggregate_ordering): Utility to ad-hoc create a complex ordering relation, e.g. for use in sorting algorithms
 * [type_pack, value_pack](#parameter_pack): Wrappers to enable easy handling of parameter packs
-* [type_traits](#type_traits<T>): A large wrapper for many type traits
+* [type_traits\<T\>](#type_traits\<T\>): A large wrapper for many type traits
 * [Callable_Wrapper](#Callable_Wrapper): A wrapper to allow passing C++ callables to C-APIs
-* [explicit_<T>](#explicit_<T>): A wrapper that disallows implicit conversions
-* [select_overload](#select_overload)': Utility to select a specific overload form an overload set 
+* [explicit_\<T\>](#explicit_\<T\>): A wrapper that disallows implicit conversions
+* [select_overload\<R(Args...)\>](#select_overload)': Utility to select a specific overload form an overload set 
 * [try_constexpr_invoke](#try_constexpr_invoke): Utility to potentially evaluate a function at compile time
-* [State_Machine](#State_Machine<State_Enum>): Utility to create simple state machines
+* [State_Machine](#State_Machine): Utility to create simple state machines
 
 ## Overview:
 
@@ -117,12 +117,12 @@ Expected<int,err_a> expected_b = err_a::a1; // expected now contains an err_a
 }
 ```
 
-## explicit_<T>
+## explicit_\<T\>
 
 
 A helper type that does not allow implicit conversions
 
-## inheritance_variant<Base,Derived...>
+## inheritance_variant\<Base,Derived...\>
 
 
 This is a variant-like sum type that only allows storage of a compile time known list of types derived from a common `Base`. It provieds access to a base pointer, allowing for slightly cleaner usage without having to go through `std::visit`.
@@ -243,7 +243,7 @@ List of provided utilities. Assume that `pack` is one of the above and `X` is a 
 * function `static_for<pack>( Callable&& callable )` that invokes `Callable` for every type or value in `pack`, passing it as a distinct type, so it can be used as a constant expression
 
 
-## State_Machine<State_Enum>
+## State_Machine
 
 This provides a utility to create a rudimentary state machine from an enum and functions.
 
@@ -306,7 +306,7 @@ int main()
 }
 ```
 
-## type_traits<T>
+## type_traits\<T\>
 
 This header provides a generic type trait `type_traits<T>`, that contains almost all information about a type.
 
