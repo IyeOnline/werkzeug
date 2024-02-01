@@ -68,7 +68,7 @@ auto wrapper = werkzeug::make_wrapper<double(double,double,user_data)>( callable
 REQUIRE( callable(0,1) == c_api_tail( 0, 1, wrapper, &wrapper ) );
 ```
 
-## `Expected<T,Errors...>`
+## Expected<T,Errors...>
 
 
 This is an extended version of `std::expected`. Notably it allows you to directly specifc multiple error types (instead of having to manually interact with a `variant`).
@@ -117,12 +117,12 @@ Expected<int,err_a> expected_b = err_a::a1; // expected now contains an err_a
 }
 ```
 
-## `explicit_<T>`
+## explicit_<T>
 
 
 A helper type that does not allow implicit conversions
 
-## `inheritance_variant<Base,Derived...>`
+## inheritance_variant<Base,Derived...>
 
 
 This is a variant-like sum type that only allows storage of a compile time known list of types derived from a common `Base`. It provieds access to a base pointer, allowing for slightly cleaner usage without having to go through `std::visit`.
@@ -167,7 +167,7 @@ var.emplace<Derived>();
 REQUIRE( var->type_id() == type::derived );
 ```
 
-## `overload`
+## overload
 
 
 This is an extension upon the classic pattern
