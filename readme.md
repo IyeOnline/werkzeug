@@ -18,17 +18,17 @@ The library currently provides a simple `CMake` script allowing its in-tree usag
 
 ## Interesting things in here:
 
-* [`Expected<T,Errors...>`](#`Expected<T,Errors...>`): A slightly improved alternative to `std::expected`
-* [`inheritance_variant<Base, Derived...>`](#`inheritance_variant<Base,Derived...>`): A variant-like sum type 
-* [`overload`](#`overload`): A tool to easily create overloads from multiple callables
-* [aggregate_ordering](#`aggregate_ordering`): Utility to ad-hoc create a complex ordering relation, e.g. for use in sorting algorithms
-* [type_pack, value_pack](#`parameter_pack`): Wrappers to enable easy handling of parameter packs
-* [type_traits](#`type_traits<T>`): A large wrapper for many type traits
-* [`Callable_Wrapper`](#`Callable_Wrapper`): A wrapper to allow passing C++ callables to C-APIs
-* [`explicit_<T>`](#`explicit_<T>`): A wrapper that disallows implicit conversions
-* [`select_overload`](#`select_overload`)': Utility to select a specific overload form an overload set 
-* [try_constexpr_invoke](#`try_constexpr_invoke`): Utility to potentially evaluate a function at compile time
-* [State_Machine](#`State_Machine<State_Enum>`): Utility to create simple state machines
+* [Expected<T,Errors...>](#Expected<T,Errors...>): A slightly improved alternative to `std::expected`
+* [inheritance_variant<Base, Derived...>](#inheritance_variant<Base,Derived...>): A variant-like sum type 
+* [overload](#overload): A tool to easily create overloads from multiple callables
+* [aggregate_ordering](#aggregate_ordering): Utility to ad-hoc create a complex ordering relation, e.g. for use in sorting algorithms
+* [type_pack, value_pack](#parameter_pack): Wrappers to enable easy handling of parameter packs
+* [type_traits](#type_traits<T>): A large wrapper for many type traits
+* [Callable_Wrapper](#Callable_Wrapper): A wrapper to allow passing C++ callables to C-APIs
+* [explicit_<T>](#explicit_<T>): A wrapper that disallows implicit conversions
+* [select_overload](#select_overload)': Utility to select a specific overload form an overload set 
+* [try_constexpr_invoke](#try_constexpr_invoke): Utility to potentially evaluate a function at compile time
+* [State_Machine](#State_Machine<State_Enum>): Utility to create simple state machines
 
 ## Overview:
 
@@ -40,7 +40,7 @@ This is an overview of all the seperate files and their contents:
 
 For additional examples you can look at the `tests/` (if they exist...)
 
-## `Callable_Wrapper`
+## Callable_Wrapper
 
 
 This exists to easiy create wrappers allowing using a generic C++ callable with a C language API that accepts a `void*` for any user data.
@@ -206,7 +206,7 @@ int b = my_overload(B{}); // accesses and returns B::i
 
 If the provided projectors do not have a common return type, the return type of `overload::operator()` will be `void` and potential results will be discarded.
 
-## `select_overload`
+## select_overload
 
 This is a helper to select a selecfic signature from an overload set.
 
@@ -220,7 +220,7 @@ constexpr auto f_int = select_overload<int>( &f );
 ```
 
 
-## `parameter_pack`
+## parameter_pack
 
 
 This header contains utilities for dealing with parameter packs. For this it primarily uses `type_pack<Ts...>` and `value_pack<auto...>`.
@@ -243,7 +243,7 @@ List of provided utilities. Assume that `pack` is one of the above and `X` is a 
 * function `static_for<pack>( Callable&& callable )` that invokes `Callable` for every type or value in `pack`, passing it as a distinct type, so it can be used as a constant expression
 
 
-## `State_Machine<State_Enum>`
+## State_Machine<State_Enum>
 
 This provides a utility to create a rudimentary state machine from an enum and functions.
 
@@ -306,7 +306,7 @@ int main()
 }
 ```
 
-## `type_traits<T>`
+## type_traits<T>
 
 This header provides a generic type trait `type_traits<T>`, that contains almost all information about a type.
 
@@ -370,7 +370,7 @@ if ( auto op_ptr = obj.try_operation<Stream_Insertion>() )
 }
 ```
 
-## `try_constexpr_invoke`
+## try_constexpr_invoke
 
 This utility will try to invoke a callable at compile time. If that is possible, it provides the value. Otherwise it does not.
 
@@ -394,7 +394,7 @@ constexpr auto result = try_constexpr_invoke( no );
 static_assert( not result.has_value() );
 ```
 
-## `aggregate_ordering`
+## aggregate_ordering
 
 
 This is a fancy little utility that easily lets you create custom ordering ad-hoc
