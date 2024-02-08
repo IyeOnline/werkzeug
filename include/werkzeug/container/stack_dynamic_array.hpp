@@ -16,6 +16,7 @@ namespace werkzeug
 	template<typename T, std::size_t Capacity>
 	class stack_dynamic_array
 		: public detail::Range_Stream_CRTP_Base<stack_dynamic_array<T,Capacity>>
+		, public detail::Range_Threeway_CRTP_Base<stack_dynamic_array<T, Capacity>, T>
 	{
 		Manual_Lifetime<T[Capacity]> storage_;
 		T* end_ = std::begin(storage_);
