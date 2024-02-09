@@ -10,29 +10,40 @@
 #define WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT() if ( noisy ) std::cout << __PRETTY_FUNCTION__ << "@ " << static_cast<void*>(this) << '\n' << std::flush
 
 
+
+struct stats_t
+{
+	std::size_t instance_counter = 0;
+	std::size_t default_ctor_counter = 0;
+	std::size_t value_ctor_counter = 0;
+	std::size_t dtor_counter = 0;
+	std::size_t copy_ctor_counter = 0;
+	std::size_t copy_assign_counter = 0;
+	std::size_t move_ctor_counter = 0;
+	std::size_t move_assign_counter = 0;
+};
+
 template<typename Concrete>
 struct Lifetime_Informer_CRTP
 {
-	static inline std::size_t instance_counter = 0;
-	static inline std::size_t default_ctor_counter = 0;
-	static inline std::size_t value_ctor_counter = 0;
-	static inline std::size_t dtor_counter = 0;
-	static inline std::size_t copy_ctor_counter = 0;
-	static inline std::size_t copy_assign_counter = 0;
-	static inline std::size_t move_ctor_counter = 0;
-	static inline std::size_t move_assign_counter = 0;
+	static inline stats_t stats_;
 	static inline bool noisy = false;
+
+	static const stats_t& stats()
+	{
+		return stats_;
+	}
 
 	static void reset() noexcept
 	{
-		instance_counter = 0;
-		default_ctor_counter = 0;
-		value_ctor_counter = 0;
-		dtor_counter = 0;
-		copy_ctor_counter = 0;
-		copy_assign_counter = 0;
-		move_ctor_counter = 0;
-		move_assign_counter = 0;
+		stats_.instance_counter = 0;
+		stats_.default_ctor_counter = 0;
+		stats_.value_ctor_counter = 0;
+		stats_.dtor_counter = 0;
+		stats_.copy_ctor_counter = 0;
+		stats_.copy_assign_counter = 0;
+		stats_.move_ctor_counter = 0;
+		stats_.move_assign_counter = 0;
 	}
 
 	struct Silent_Tag
@@ -44,43 +55,43 @@ struct Lifetime_Informer_CRTP
 	Lifetime_Informer_CRTP() noexcept
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++default_ctor_counter;
-		++instance_counter;
+		++stats_.default_ctor_counter;
+		++stats_.instance_counter;
 	}
 
 	Lifetime_Informer_CRTP( const Lifetime_Informer_CRTP& ) noexcept
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++instance_counter;
-		++copy_ctor_counter;
+		++stats_.instance_counter;
+		++stats_.copy_ctor_counter;
 	}
 
 	Lifetime_Informer_CRTP( Lifetime_Informer_CRTP&& ) noexcept
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++instance_counter;
-		++move_ctor_counter;
+		++stats_.instance_counter;
+		++stats_.move_ctor_counter;
 	}
 
 	Lifetime_Informer_CRTP& operator=( const Lifetime_Informer_CRTP& ) noexcept
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++copy_assign_counter;
+		++stats_.copy_assign_counter;
 		return *this;
 	}
 
 	Lifetime_Informer_CRTP& operator=( Lifetime_Informer_CRTP&& ) noexcept
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++move_assign_counter;
+		++stats_.move_assign_counter;
 		return *this;
 	}
 
 	~Lifetime_Informer_CRTP() noexcept
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++dtor_counter;
-		--instance_counter;
+		++stats_.dtor_counter;
+		--stats_.instance_counter;
 	}
 };
 
@@ -101,8 +112,8 @@ struct Lifetime_Informer : Lifetime_Informer_CRTP<Lifetime_Informer>
 		: base{ typename base::Silent_Tag{} }, i{i_}
 	{
 		WERKZEUG_TEST_LIFETIME_INFORMER_MAKE_OUTPUT();
-		++instance_counter;
-		++value_ctor_counter;
+		++stats_.instance_counter;
+		++stats_.value_ctor_counter;
 	}
 
 	~Lifetime_Informer()
@@ -116,6 +127,26 @@ struct Lifetime_Informer : Lifetime_Informer_CRTP<Lifetime_Informer>
 	operator int() const noexcept
 	{
 		return i;
+	}
+};
+
+struct Polymorphic_Lifetime_Informer_Base
+{
+	virtual ~Polymorphic_Lifetime_Informer_Base() = default;
+
+	virtual const stats_t& pstats() const = 0;
+};
+
+
+template<size_t N>
+struct Polymorphic_Lifetime_Informer_Derived 
+	: Polymorphic_Lifetime_Informer_Base
+	, Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Derived<N>>
+{
+	using LTI_Base = Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Derived<N>>;
+	virtual const stats_t& pstats() const override
+	{
+		return LTI_Base::stats();
 	}
 };
 

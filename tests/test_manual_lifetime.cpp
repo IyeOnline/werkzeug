@@ -17,9 +17,9 @@ TEST_CASE("expected")
 
 	{
 		Manual_Lifetime<Lifetime_Informer> inf;
-		REQUIRE ( Lifetime_Informer::instance_counter == 0 );
+		REQUIRE ( Lifetime_Informer::stats().instance_counter == 0 );
 	}
-	REQUIRE( Lifetime_Informer::dtor_counter == 0 );
+	REQUIRE( Lifetime_Informer::stats().dtor_counter == 0 );
 
 	{
 		Manual_Lifetime<Lifetime_Informer> inf{ 5 };
@@ -27,6 +27,6 @@ TEST_CASE("expected")
 		inf.destroy();
 		inf2.destroy();
 	}
-	REQUIRE ( Lifetime_Informer::value_ctor_counter == 2 );
-	REQUIRE ( Lifetime_Informer::dtor_counter == 2 );
+	REQUIRE ( Lifetime_Informer::stats().value_ctor_counter == 2 );
+	REQUIRE ( Lifetime_Informer::stats().dtor_counter == 2 );
 }

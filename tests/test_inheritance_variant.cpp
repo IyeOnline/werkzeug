@@ -23,14 +23,7 @@ struct Base : Lifetime_Informer_CRTP<Base>
 
 struct Derived_1 : Base, Lifetime_Informer_CRTP<Derived_1>
 {
-	using Lifetime_Informer_CRTP<Derived_1>::instance_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::default_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::value_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::dtor_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::copy_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::copy_assign_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::move_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_1>::move_assign_counter;
+	using Lifetime_Informer_CRTP<Derived_1>::stats;
 	using Lifetime_Informer_CRTP<Derived_1>::noisy;
 	using Lifetime_Informer_CRTP<Derived_1>::reset;
 
@@ -42,14 +35,7 @@ struct Derived_1 : Base, Lifetime_Informer_CRTP<Derived_1>
 
 struct Derived_2 : Base, Lifetime_Informer_CRTP<Derived_2>
 {
-	using Lifetime_Informer_CRTP<Derived_2>::instance_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::default_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::value_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::dtor_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::copy_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::copy_assign_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::move_ctor_counter;
-	using Lifetime_Informer_CRTP<Derived_2>::move_assign_counter;
+	using Lifetime_Informer_CRTP<Derived_2>::stats;
 	using Lifetime_Informer_CRTP<Derived_2>::noisy;
 	using Lifetime_Informer_CRTP<Derived_2>::reset;
 
@@ -74,24 +60,24 @@ TEST_CASE("inheritance variant")
 		// Derived_1::noisy = true;
 		variant_t var{ Derived_1{} };
 		REQUIRE( var.index() == 1 );
-		REQUIRE( Derived_1::instance_counter == 1 );
-		REQUIRE( Derived_1::default_ctor_counter == 1 );
-		REQUIRE( Derived_1::move_ctor_counter == 1 );
-		REQUIRE( Derived_1::dtor_counter == 1 ); // temporary for parameter is destroyed
+		REQUIRE( Derived_1::stats().instance_counter == 1 );
+		REQUIRE( Derived_1::stats().default_ctor_counter == 1 );
+		REQUIRE( Derived_1::stats().move_ctor_counter == 1 );
+		REQUIRE( Derived_1::stats().dtor_counter == 1 ); // temporary for parameter is destroyed
 		REQUIRE( var->type_id() == type::derived_1 );
 
 		var.emplace<Derived_2>();
 		REQUIRE( var.index() == 2 );
-		REQUIRE( Derived_1::dtor_counter == 2 ); //held obj1 is destroyed
-		REQUIRE( Derived_1::instance_counter == 0 );
-		REQUIRE( Derived_2::default_ctor_counter == 1 );
-		REQUIRE( Derived_2::instance_counter == 1 );
-		REQUIRE( Derived_2::copy_ctor_counter == 0 );
-		REQUIRE( Derived_2::move_ctor_counter == 0 );
+		REQUIRE( Derived_1::stats().dtor_counter == 2 ); //held obj1 is destroyed
+		REQUIRE( Derived_1::stats().instance_counter == 0 );
+		REQUIRE( Derived_2::stats().default_ctor_counter == 1 );
+		REQUIRE( Derived_2::stats().instance_counter == 1 );
+		REQUIRE( Derived_2::stats().copy_ctor_counter == 0 );
+		REQUIRE( Derived_2::stats().move_ctor_counter == 0 );
 		REQUIRE( var->type_id() == type::derived_2 );
 	}
-	REQUIRE( Derived_2::instance_counter == 0 );
-	REQUIRE( Derived_2::dtor_counter == 1 );
+	REQUIRE( Derived_2::stats().instance_counter == 0 );
+	REQUIRE( Derived_2::stats().dtor_counter == 1 );
 
 	Base::reset();
 	Derived_1::reset();
@@ -100,8 +86,8 @@ TEST_CASE("inheritance variant")
 	{
 		variant_t var;
 		REQUIRE( var.index() == var.npos );
-		REQUIRE( Base::instance_counter == 0 );
-		REQUIRE( Derived_1::instance_counter == 0 );
-		REQUIRE( Derived_2::instance_counter == 0 );
+		REQUIRE( Base::stats().instance_counter == 0 );
+		REQUIRE( Derived_1::stats().instance_counter == 0 );
+		REQUIRE( Derived_2::stats().instance_counter == 0 );
 	}
 }

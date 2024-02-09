@@ -15,15 +15,15 @@ TEST_CASE("dynamic_array no buffer")
 	Lifetime_Informer::noisy = true;
 	{
 		basic_dynamic_array_small_buffer<Lifetime_Informer,0,test_resource> arr;
-		REQUIRE ( Lifetime_Informer::instance_counter == 0 );
+		REQUIRE ( Lifetime_Informer::stats().instance_counter == 0 );
 		REQUIRE( arr.size() == 0 );
 		REQUIRE( arr.capacity() == 0 );
 
 		arr.emplace_back();
 		REQUIRE( arr.size() == 1 );
 		REQUIRE( arr.capacity() == 1 );
-		REQUIRE ( Lifetime_Informer::instance_counter == 1 );
-		REQUIRE ( Lifetime_Informer::default_ctor_counter == 1 );
+		REQUIRE ( Lifetime_Informer::stats().instance_counter == 1 );
+		REQUIRE ( Lifetime_Informer::stats().default_ctor_counter == 1 );
 		REQUIRE( arr[0] == 0 );
 	}
 }
@@ -32,7 +32,7 @@ TEST_CASE("dynamic_array no buffer")
 {
 	{
 		basic_dynamic_array_small_buffer<Lifetime_Informer,4,test_resource> arr;
-		REQUIRE ( Lifetime_Informer::instance_counter == 0 );
+		REQUIRE ( Lifetime_Informer::stats().instance_counter == 0 );
 		REQUIRE( arr.size() == 0 );
 		REQUIRE( arr.capacity() == 4 );
 		REQUIRE ( arr.is_in_buffer() );
