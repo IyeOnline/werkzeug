@@ -23,7 +23,7 @@ The library currently provides a simple `CMake` script allowing its in-tree usag
 * [overload](#overload): A tool to easily create overloads from multiple callables
 * [aggregate_ordering](#aggregate_ordering): Utility to ad-hoc create a complex ordering relation, e.g. for use in sorting algorithms
 * [type_pack, value_pack](#parameter_pack): Wrappers to enable easy handling of parameter packs
-* [type_traits\<T\>](#type_traits): A large wrapper for many type traits
+* [type_traits](#type_traits): A large wrapper for many type traits
 * [Callable_Wrapper](#Callable_Wrapper): A wrapper to allow passing C++ callables to C-APIs
 * [explicit_](#explicit_): A wrapper that disallows implicit conversions
 * [select_overload](#select_overload)': Utility to select a specific overload form an overload set 
@@ -32,7 +32,7 @@ The library currently provides a simple `CMake` script allowing its in-tree usag
 
 ## Overview:
 
-The `container/` and `memory/` parts are mainly rewrites of existing (standard library) tools for exploration/technical learning purposes. The things in `simple_vector_implementation/` are iterative, simpler versions of `vector`. They mostly exist for learners to look at with less "feature related clutter". A complete and advanced vector implementation is in `container/.dynamic_array.hpp`.
+The `container/` and `memory/` parts are mainly rewrites of existing (standard library) tools for exploration/technical learning purposes. The things in `simple_vector_implementation/` are iterative, simpler versions of `vector`. They mostly exist for learners to look at with less "feature related clutter". A complete and advanced vector implementation is in `container/dynamic_array.hpp`.
 
 Note that not everything in here is of similar implementation quality/completeness. Some things are as complete as can be with correct `noexcept` specifiers, others may lack all basic functionality.
 
@@ -227,20 +227,22 @@ This header contains utilities for dealing with parameter packs. For this it pri
 
 Both provide the same functionalities:
 
-List of provided utilities. Assume that `pack` is one of the above and `X` is a type or value, depending on the kind in question.
+List of provided utilities:
 
-* `concept type_pack_c<T>` that tells you whether `pack` is an instantiation of `type pack`
-* `concept value_pack_c<T>` that tells you whether `pack` is an instantiation of `value_pack`
-* `pack::size` gives you the size of the pack
-* `pack::contains<X>()` tells you whether the `pack` contains `X`
-* `pack::index_of<X>()` tells you the index of `X` in `pack`
-* trait `type_at_index<I,pack>` that gives you the type at index `I`. Can also be used as `type_at_index<I,Ts...>`
-* trait `value_at_index<I,pack>` that vies you the value at index `I`. Can also be used as `value_at_index<I,Vs...>`
-* trait `all_unique<Ts...>`, `all_unique<X>`, `all_unique<X>`
-* trait `pack_inclues<pack1,pack2>` tells you whether `pack1` fully includes `pack2`
-* trait `append<pack1,X>` that appends `X` to `pack1`. Can also be used as `append<pack1,pack2>` to append the entire pack
-* trait `append_if_unique<pack1,X>` that appends `X` to `pack1`, if `pack1` does not already contain `X`
-* function `static_for<pack>( Callable&& callable )` that invokes `Callable` for every type or value in `pack`, passing it as a distinct type, so it can be used as a constant expression
+* `type_pack_c<T>`: concept to check whether `T` is an instantiation of `type_pack`
+* `value_pack_c<T>`: concept to check whether `T` is an instantiation of `value_pack`
+* `pack::size`: static member containing the size of the pack
+* `pack::contains<X>()`: static member returning  whether `pack` contains `X` (type or value)
+* `pack::index_of<X>()`: static member returning the index of `X` in `pack`
+* `type_pack::type_at<I>`: static member typedef, giving the type at index `I`
+* `value_pack::value_at<I>`: static data member, giving the value at index `I`
+* `type_at_index<I,type_pack>`: freestanding metafunction get thet type at `I`. Can also be used as `type_at_index<I,Ts...>`.
+* `value_at_index<I,valze_pack>`: freestanding metafunction to get the value at index `I`. Can also be used as `value_at_index<I,Vs...>`
+* `all_unique<Ts...>`, `all_unique<type_pack>`, `all_unique<value_pack>`: freestanding metafunction to querry if all elements in a pack are unique.
+* `pack_inclues<pack1,pack2>`: freestanding metafunction to check whether `pack1` fully includes `pack2`
+* `append<pack1,X>`: freestanding metafunction that appends `X` to `pack1`. Can also be used as `append<pack1,pack2>` to append the entire pack
+* `append_if_unique<pack1,X>`: freestanding metafunction that appends `X` to `pack1`, if `pack1` does not already contain `X`
+* `static_for<pack>( Callable&& callable )`: function that invokes `Callable` for every type or value in `pack`, passing it as a distinct type, so it can be used as a constant expression
 
 
 ## State_Machine
@@ -250,7 +252,6 @@ This provides a utility to create a rudimentary state machine from an enum and f
 #### Example:
 
 ```cpp
-
 // an enum for our states
 enum class states : unsigned char
 {
@@ -318,7 +319,9 @@ For every operation, there is named member type trait, that tells you if the ope
 * `traits<T>::swap::nothrow`
 * `traits<T>::copy_construct::trivial`
 * `traits<T>::template invocable<Args...>::possible`
-* `traits<T>::subscript::nothro`
+* `traits<T>::subscript::nothrow`
+
+All member traits follow the pattern of providing `possible`, `trivial` and `nothrow` to check the respective property.
 
 `type_constant`
 ---
@@ -328,7 +331,8 @@ Pretty much `std::integral_constant` with a better name.
 Provides a user defined literal `_tc` that automatically creates a `size_t` or `long double` `type_constant`:
 
 ```cpp
-constexpr auto zero = 0_tc;
+constexpr auto A = 0_tc; // type_constant<0,size_t>{}
+constexpr auto B = 0.0_tc; // type_constant<0.0l,long double>{}
 ```
 
 `type_erased_object`

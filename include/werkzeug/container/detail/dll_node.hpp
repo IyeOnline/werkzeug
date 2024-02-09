@@ -2,7 +2,6 @@
 #define WERKZEUG_GUARD_DETAIL_CONTAINER_DLL_NODE_HPP
 
 #include <utility>
-#include <cassert>
 #include <iostream>
 
 namespace werkzeug::detail

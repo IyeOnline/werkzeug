@@ -83,6 +83,8 @@ namespace werkzeug
 				size_ = new_size;
 			}
 		};
+
+		static_assert( sizeof(size_and_state_t<true>) == sizeof(size_and_state_t<false>) );
 	}
 
 	/**
