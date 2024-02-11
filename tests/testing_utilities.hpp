@@ -99,7 +99,6 @@ struct Lifetime_Informer : Lifetime_Informer_CRTP<Lifetime_Informer>
 {
 	using base = Lifetime_Informer_CRTP<Lifetime_Informer>;
 
-
 	int i = 0;
 
 	Lifetime_Informer() = default;
@@ -131,19 +130,54 @@ struct Lifetime_Informer : Lifetime_Informer_CRTP<Lifetime_Informer>
 };
 
 struct Polymorphic_Lifetime_Informer_Base
+	: Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Base>
 {
+private :
+	using LTI_Base = Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Base>;
+public :
+
+	using LTI_Base::stats;
+	using LTI_Base::reset;
+
 	virtual ~Polymorphic_Lifetime_Informer_Base() = default;
 
-	virtual const stats_t& pstats() const = 0;
+
+	virtual const std::type_info& type_id() const
+	{
+		return typeid(*this);
+	}
+
+	virtual int number() const
+	{
+		return -1;
+	}
+
+	virtual const stats_t& pstats() const
+	{
+		return LTI_Base::stats();
+	}
 };
 
-
-template<size_t N>
+template<int ID>
 struct Polymorphic_Lifetime_Informer_Derived 
 	: Polymorphic_Lifetime_Informer_Base
-	, Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Derived<N>>
+	, Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Derived<ID>>
 {
-	using LTI_Base = Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Derived<N>>;
+private :
+	using LTI_Base = Lifetime_Informer_CRTP<Polymorphic_Lifetime_Informer_Derived<ID>>;
+public :
+
+	using LTI_Base::stats;
+	using LTI_Base::reset;
+
+	virtual const std::type_info& type_id() const override
+	{
+		return typeid(*this);
+	}
+
+	virtual int number() const override
+	{ return ID; }
+
 	virtual const stats_t& pstats() const override
 	{
 		return LTI_Base::stats();

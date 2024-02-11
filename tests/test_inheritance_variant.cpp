@@ -10,42 +10,9 @@ enum class type
 	base, derived_1, derived_2
 };
 
-
-struct Base : Lifetime_Informer_CRTP<Base>
-{
-	virtual type type_id()
-	{
-		return type::base;
-	}
-
-	virtual ~Base() = default;
-};
-
-struct Derived_1 : Base, Lifetime_Informer_CRTP<Derived_1>
-{
-	using Lifetime_Informer_CRTP<Derived_1>::stats;
-	using Lifetime_Informer_CRTP<Derived_1>::noisy;
-	using Lifetime_Informer_CRTP<Derived_1>::reset;
-
-	virtual type type_id()
-	{
-		return type::derived_1;
-	}
-};
-
-struct Derived_2 : Base, Lifetime_Informer_CRTP<Derived_2>
-{
-	using Lifetime_Informer_CRTP<Derived_2>::stats;
-	using Lifetime_Informer_CRTP<Derived_2>::noisy;
-	using Lifetime_Informer_CRTP<Derived_2>::reset;
-
-	virtual type type_id()
-	{
-		return type::derived_2;
-	}
-};
-
-
+using Base = Polymorphic_Lifetime_Informer_Base;
+using Derived_1 = Polymorphic_Lifetime_Informer_Derived<1>;
+using Derived_2 = Polymorphic_Lifetime_Informer_Derived<2>;
 
 TEST_CASE("inheritance variant")
 {
@@ -64,7 +31,7 @@ TEST_CASE("inheritance variant")
 		REQUIRE( Derived_1::stats().default_ctor_counter == 1 );
 		REQUIRE( Derived_1::stats().move_ctor_counter == 1 );
 		REQUIRE( Derived_1::stats().dtor_counter == 1 ); // temporary for parameter is destroyed
-		REQUIRE( var->type_id() == type::derived_1 );
+		REQUIRE( var->type_id() == typeid(Derived_1) );
 
 		var.emplace<Derived_2>();
 		REQUIRE( var.index() == 2 );
@@ -74,7 +41,7 @@ TEST_CASE("inheritance variant")
 		REQUIRE( Derived_2::stats().instance_counter == 1 );
 		REQUIRE( Derived_2::stats().copy_ctor_counter == 0 );
 		REQUIRE( Derived_2::stats().move_ctor_counter == 0 );
-		REQUIRE( var->type_id() == type::derived_2 );
+		REQUIRE( var->type_id() == typeid(Derived_2) );
 	}
 	REQUIRE( Derived_2::stats().instance_counter == 0 );
 	REQUIRE( Derived_2::stats().dtor_counter == 1 );

@@ -1,19 +1,17 @@
 #ifndef WERKZEUG_GUARD_CONTAINER_POLYMORPHIC_LIST_HPP
 #define WERKZEUG_GUARD_CONTAINER_POLYMORPHIC_LIST_HPP
 
-#include <concepts>
-
-#include "werkzeug/concepts.hpp"
-#include "werkzeug/crtp_range_bases.hpp"
+#include "werkzeug/container/crtp_range_bases.hpp"
 #include "werkzeug/memory/concepts.hpp"
-#include "werkzeug/memory/allocator.hpp"
+#include "werkzeug/memory/resource.hpp"
+#include "werkzeug/assertion.hpp"
 
 namespace werkzeug
 {
 	template<typename Base, memory::concepts::memory_source Resource = memory::resource::fixed::New_Resource>
 	class polymorphic_list
 		: public detail::Range_Stream_CRTP_Base<polymorphic_list<Base,Resource>>
-		, public detail::Range_Threeway_CRTP_Base<polymorphic_list<Base,Resource>,Base>
+		// , public detail::Range_Threeway_CRTP_Base<polymorphic_list<Base,Resource>,Base>
 	{
 		struct size_align_t
 		{
@@ -99,6 +97,7 @@ namespace werkzeug
 			return node;
 		}
 
+		// doesnt update size
 		void copy_from( const polymorphic_list& other )
 		{
 			if ( other.head == nullptr )
@@ -107,11 +106,12 @@ namespace werkzeug
 			}
 			head = copy_single( other.head );
 			auto current_tail = head;
-			for ( auto source_ptr = other.head->next, dest_ptr = head; source_ptr!=nullptr; source_ptr = source_ptr->next )
+			// for ( auto source_ptr = other.head->next, dest_ptr = head; source_ptr!=nullptr; source_ptr = source_ptr->next )
+			for ( auto source_ptr = other.head->next; source_ptr!=nullptr; source_ptr = source_ptr->next )
 			{
 				auto new_node = copy_single( source_ptr );
 				current_tail->next = new_node;
-				new_node->nrev = current_tail;
+				new_node->prev = current_tail;
 				current_tail = new_node;
 			}
 			tail = current_tail;
@@ -131,6 +131,7 @@ namespace werkzeug
 			friend class iterator_impl<true,false>;
 			
 		public :
+			iterator_impl( const iterator_impl& ) = default;
 			iterator_impl( const iterator_impl<false, is_backward>& other )
 				requires ( is_const )
 				: ptr{ other.ptr }, is_end{ other.is_end }
@@ -207,14 +208,14 @@ namespace werkzeug
 		{ }
 
 		polymorphic_list( const polymorphic_list& other )
-			: resource{ other.resource }, size_{other.size_}
+			: size_{other.size_}, resource{ other.resource }
 		{
 			copy_from( other );
 		}
 
 		polymorphic_list( polymorphic_list&& other ) noexcept
-			: resource{ std::forward<Resource>(resource) },
-			head{ std::exchange(other.head, nullptr) }, tail{ std::exchange(other.tail,nullptr) }, size_{ std::exchange(other.size_,0) }
+			: head{ std::exchange(other.head, nullptr) }, tail{ std::exchange(other.tail,nullptr) }, size_{ std::exchange(other.size_,0) }
+			, resource{ std::forward<Resource>(resource) }
 		{ }
 
 		polymorphic_list& operator=( const polymorphic_list& other ) 
@@ -247,6 +248,9 @@ namespace werkzeug
 				assert( resource.deallocate( { as_resource_pointer(tail), size }, alignment ) );
 				tail = prev;
 			}
+			head = nullptr;
+			tail = nullptr;
+			size_ = 0;
 		}
 
 		template<typename Derived = Base, typename ... Args>
@@ -273,7 +277,7 @@ namespace werkzeug
 
 			++size_;
 
-			return *static_cast<Derived*>( tail->get_pointer() );
+			return new_node->value;
 		}
 
 
@@ -286,7 +290,7 @@ namespace werkzeug
 			const auto block = resource.allocate( sizeof(Node_T), alignof(Node_T) );
 			assert( block );
 
-			auto new_node = new (block.ptr) Node_T{ tail, nullptr, std::forward<Args>(args) ... };
+			auto new_node = new (block.ptr) Node_T{ nullptr, head, std::forward<Args>(args) ... };
 
 			if ( head == nullptr )
 			{
@@ -301,7 +305,7 @@ namespace werkzeug
 
 			++size_;
 
-			return *static_cast<Derived*>( tail->get_pointer() );
+			return new_node->value;
 		}
 
 		template<typename Derived = Base, typename ... Args>
@@ -313,10 +317,10 @@ namespace werkzeug
 			{
 				return emplace_back<Derived>( std::forward<Args>( args ) ... );
 			}
-			// else if ( position == begin() )
-			// {
-			// 	return emplace_front<Derived>( std::forward<Args>( args ) ... );
-			// }
+			else if ( position == begin() )
+			{
+				return emplace_front<Derived>( std::forward<Args>( args ) ... );
+			}
 
 			auto* insertion_point = position.ptr;
 
@@ -333,10 +337,49 @@ namespace werkzeug
 				head = new_node;
 			}
 
+			++size_;
+
 			return new_node->value;
 		}
 
-		void print_links( std::ostream& os ) const noexcept
+		void splice_at( const iterator it, polymorphic_list&& other ) noexcept
+		{
+			WERKZEUG_ASSERT( &other != this, "Must not splice list into itself" );
+			if ( other.size_ == 0 )
+			{
+				return;
+			}
+
+			if ( it == begin() )
+			{
+				other.tail->next = head;
+				head->prev = other.tail;
+				head = other.head;
+			}
+			else if ( it == end() )
+			{
+				tail->next = other.head;
+				other.head->prev = tail;
+				tail = other.tail;
+			}
+			else
+			{
+				const auto infront = it.ptr->prev;
+				const auto after = it.ptr;
+
+				infront->next = other.head;
+				other.head->prev = infront;
+				after->prev = other.tail;
+				other.tail->next = after;
+			}
+
+			other.head = nullptr;
+			other.tail = nullptr; 
+			size_ += other.size_;
+			other.size_ = 0;
+		}
+
+		void print_links( std::ostream& os = std::cout ) const noexcept
 		{
 			for ( auto curr = head; curr != nullptr; curr = curr->next )
 			{
