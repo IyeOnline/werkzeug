@@ -178,6 +178,7 @@ namespace werkzeug
 				}
 				else if constexpr ( not is_last )
 				{
+					std::construct_at( &rest );
 					return rest.template construct<I>( std::forward<Params>(params)...);
 				}
 				WERKZEUG_UNREACHABLE();
@@ -297,16 +298,16 @@ namespace werkzeug
 			}
 			return false;
 		};
-		constexpr static auto three_way_compare_expression = []( const auto* lhs, const Base* rhs )
-		{
-			using T = std::remove_pointer_t<decltype(lhs)>;
-			return *lhs <=> static_cast<const T&>( *rhs );
-		};
-		constexpr static auto equality_compare_expression = []( const auto* lhs, const Base* rhs )
-		{
-			using T = std::remove_pointer_t<decltype(lhs)>;
-			return *lhs == static_cast<const T&>( *rhs );
-		};
+		// constexpr static auto three_way_compare_expression = []( const auto* lhs, const Base* rhs )
+		// {
+		// 	using T = std::remove_pointer_t<decltype(lhs)>;
+		// 	return *lhs <=> static_cast<const T&>( *rhs );
+		// };
+		// constexpr static auto equality_compare_expression = []( const auto* lhs, const Base* rhs )
+		// {
+		// 	using T = std::remove_pointer_t<decltype(lhs)>;
+		// 	return *lhs == static_cast<const T&>( *rhs );
+		// };
 
 		detail::based_storage<Base,Children...> storage{};
 
@@ -588,15 +589,15 @@ namespace werkzeug
 
 			if ( not lhs.has_value() && not rhs.has_value() )
 			{
-				return std::strong_ordering::equal;
+				return three_way_result_t::equivalent;
 			}
 			else if ( not lhs.has_value() )
 			{
-				return std::strong_ordering::less;
+				return three_way_result_t::less;
 			}
 			else if ( not rhs.has_value() )
 			{
-				return std::strong_ordering::greater;
+				return three_way_result_t::greater;
 			}
 			else if ( lhs.index_ != rhs.index_ )
 			{
@@ -604,11 +605,11 @@ namespace werkzeug
 			}
 			else
 			{
-				if constexpr ( ( std::three_way_comparable<Children> && ... ) )
-				{
-					return three_way_result_t{ lhs.storage.apply( lhs.index_, three_way_compare_expression, rhs.that() ) };
-				}
-				else
+				// if constexpr ( ( std::three_way_comparable<Children> && ... ) )
+				// {
+				// 	return three_way_result_t{ lhs.storage.apply( lhs.index_, three_way_compare_expression, rhs.that() ) };
+				// }
+				// else
 				{	
 					return three_way_result_t{ *(lhs.that()) <=> *(rhs.that()) };
 				}
@@ -625,11 +626,11 @@ namespace werkzeug
 			}
 			else
 			{
-				if constexpr ( (traits<Children>::equality_compare::possible && ... ))
-				{
-					return lhs.storage.apply( lhs.index_, equality_compare_expression, rhs.that() );
-				}
-				else
+				// if constexpr ( (traits<Children>::equality_compare::possible && ... ))
+				// {
+				// 	return lhs.storage.apply( lhs.index_, equality_compare_expression, rhs.that() );
+				// }
+				// else
 				{
 					return *(lhs.that()) == *(rhs.that());
 				}

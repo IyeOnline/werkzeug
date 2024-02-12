@@ -58,3 +58,30 @@ TEST_CASE("inheritance variant")
 		REQUIRE( Derived_2::stats().instance_counter == 0 );
 	}
 }
+
+
+struct B
+{
+	friend bool operator==( const B&, const B& ) = default;
+};
+
+
+
+struct D : B
+{};
+
+
+constexpr auto test_inheritance_variant_constexpr()
+{
+	using werkzeug::inheritance_variant;
+
+	inheritance_variant<B,D> var;
+
+	var.emplace<B>();
+	var.emplace<D>();
+	
+	return var == var;
+}
+
+
+[[maybe_unused]] constexpr auto v = test_inheritance_variant_constexpr();
