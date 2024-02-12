@@ -107,6 +107,26 @@ namespace werkzeug
 				return f;
 			}
 		};
+		template<typename R, typename ... Args>
+		struct select_overload_t<R(Args...)>
+		{
+			constexpr auto operator()( R(*f)(Args...) )
+			{
+				return f;
+			}
+
+			template<typename C>
+			constexpr auto operator()( R(C::*f)(Args...) )
+			{
+				return f;
+			}
+
+			template<typename C>
+			constexpr auto operator()( R(C::*f)(Args...) const )
+			{
+				return f;
+			}
+		};
 	}
 
 	/**
