@@ -202,6 +202,27 @@ namespace werkzeug
 
 
 		/**
+		 * @brief obtains a reference to the stored value. If no value is currently stored, emplaces a value from args...
+		 * 
+		 * @param ...args arguments to potentially use for construction
+		 */
+		template<typename ... Args>
+		[[nodiscard]] constexpr T& emplace_or_value( Args&& ... args )  
+			noexcept( traits::copy_construct::nothrow and traits::template construct_from<Args...>::nothrow )
+			requires ( traits::template construct_from<Args...>::possible )
+		{
+			if ( has_value() )
+			{
+				return std::get<T>( data_ );
+			}
+			else
+			{
+				return data_.emplace( std::in_place_type<T>, std::forward<Args>(args) ... );
+			}
+		}
+
+
+		/**
 		 * @brief obtains a copy of the stored value or constructs a value from args...
 		 * 
 		 * @param ...args arguments to potentially use for construction
