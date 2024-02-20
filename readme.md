@@ -4,6 +4,8 @@ This is a collection of tools/utilities I wrote over time. Most parts are indepe
 
 It is sort of a general utilities library, but you are unlikely go use every part of it.
 
+"Werkzeug" means "tool" in german, hence the name.
+
 ### Who is this for?
 
 Primarily me and anybody who is interested. I wrote these things out of curiosity/because they seemed interesting.
