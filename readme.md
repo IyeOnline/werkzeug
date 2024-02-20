@@ -31,6 +31,7 @@ The library currently provides a simple `CMake` script allowing its in-tree usag
 * [select_overload](#select_overload)': Utility to select a specific overload form an overload set 
 * [try_constexpr_invoke](#try_constexpr_invoke): Utility to potentially evaluate a function at compile time
 * [State_Machine](#State_Machine): Utility to create simple state machines
+* [Nd array types](#ND_Array): Nd linearly indexed arrays/tables (similar to C++23 `std::mdarray`). Multiple versions with different axis settings, as well as interpolating versions exist.
 
 ## Overview:
 
@@ -439,6 +440,40 @@ REQUIRE( arr[2].i == 2 );
 REQUIRE( arr[2].d == 2.0 );
 
 REQUIRE( arr[3].j == 1 );
+```
+
+## Nd_Array
+
+These array types are similar to `std::mdarray`, but are C++17 compatible. Their primary purpose is the implementation of the `Interpolating_` table types.
+
+* `Array_ND` is simply an ND array, supporting indexing via `operator()`
+* `Bounded_Array_Nd` also has lower and upper bounds attachted to each axis
+* `Axis_Tick_Array_Nd` instead has ticks for every dimension saved, meaning they can be non-linearly/logarythmically spaced.
+* `Basic_Interpolating_Array_Nd` is a `Bounded_Array_Nd` that can interpolate at an arbitrary position in the hypercube, or do simple extrapolation outside of it.
+* `Advanced_Interpolating_Array_Nd` is an `Axist_Tick_Array_Nd` that supports interpolation.
+
+Notable features:
+
+* All of them also provide a member function `make_view()` that creats a `std::span` like object to *view* the array/table. These objects support the exact same functionalities as the owning array itself.
+* These types can be saved to an `std::ostream` and constructed from an `std::ostream`
+* Interpolation works in N dimensions, either as lin, log or linlog interpolation.
+
+The internal data structre is as follows:
+```
+Array_Nd:
+[ axis lengths ] [ data ]
+
+Bounded_Array_Nd
+[ Array_Nd ] [ axis_lower_bounds ] [ axis_upper_bounds ] [ axis_is_log ]
+
+Basic_Interpolating_Table
+[ Bounded_Array_Nd ]
+
+Axis_Tick_Array_Nd
+[ Array_Nd ] [ axis_ticks ]
+
+[ Advanced_Interpolating_Table ]
+[ Axis_Tick_Array_Nd ]
 ```
 
 ## Achknowledgements
