@@ -30,17 +30,17 @@ namespace custom_STL
 		std::size_t size_ = 0;
 		std::size_t capacity_ = 0;
 
-		T* allocate(std::size_t size)
+		static T* allocate(std::size_t size)
 		{
 			return  static_cast<T*>( ::operator new(size * sizeof(T), alignment ) );
 		}
 
-		void deallocate(T* ptr)
+		static void deallocate(T* ptr)
 		{
 			::operator delete((void*)ptr);
 		}
 
-		void destroy(T* begin_, T* end_) noexcept(nx_dtor)
+		static void destroy(T* begin_, T* end_) noexcept(nx_dtor)
 		{
 			if constexpr ( not std::is_trivially_destructible_v<T> )
 			{
@@ -78,7 +78,7 @@ namespace custom_STL
 		using transfer_ptr_t = std::conditional_t<ttype == transfer_type::copy, const T*, T*>;
 
 		template<transfer_type ttype, transfer_operation top = transfer_operation::construct>
-		void transfer
+		static void transfer
 		(
 			transfer_ptr_t<ttype> src_begin,
 			const transfer_ptr_t<ttype> src_end,

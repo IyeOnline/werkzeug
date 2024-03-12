@@ -78,24 +78,24 @@ namespace custom_STL
 		std::size_t capacity_ = 0;
 		[[no_unique_address]] Allocator alloc_;
 
-		constexpr T* allocate(std::size_t size) noexcept(nx_Alloc::alloc)
+		static constexpr T* allocate(std::size_t size) noexcept(nx_Alloc::alloc)
 		{
 			return alloc_traits::allocate( alloc_, size );
 		}
 
-		constexpr void deallocate(T* ptr, std::size_t size ) noexcept(nx_Alloc::dealloc)
+		static constexpr void deallocate(T* ptr, std::size_t size ) noexcept(nx_Alloc::dealloc)
 		{
 			alloc_traits::deallocate( alloc_, ptr, size );
 		}
 
 		template<typename ... Ts>
-		constexpr T& construct( T* ptr, Ts&& ... params ) noexcept( nx_construct<Ts...> )
+		static constexpr T& construct( T* ptr, Ts&& ... params ) noexcept( nx_construct<Ts...> )
 		{
 			alloc_traits::construct( alloc_, ptr, std::forward<Ts>(params) ... );
 			return *ptr;
 		}
 
-		constexpr void destroy(T* begin_, T* end_) noexcept( nx_destroy )
+		static constexpr void destroy(T* begin_, T* end_) noexcept( nx_destroy )
 		{
 			if constexpr ( not std::is_trivially_destructible_v<T> )
 			{
@@ -133,7 +133,7 @@ namespace custom_STL
 		using transfer_ptr_t = std::conditional_t<ttype == transfer_type::copy, const T*, T*>;
 
 		template<transfer_type ttype, transfer_operation top = transfer_operation::construct>
-		constexpr void transfer
+		static constexpr void transfer
 		(
 			transfer_ptr_t<ttype> src_begin,
 			const transfer_ptr_t<ttype> src_end,
