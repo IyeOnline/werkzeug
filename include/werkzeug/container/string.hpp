@@ -29,8 +29,42 @@ namespace werkzeug
 	class basic_string 
 		: public dynamic_array_sso<CharT, Resource>
 	{
+
+		using base = dynamic_array_sso<CharT, Resource>;
 	public :
 		constexpr static std::size_t npos = static_cast<std::size_t>(-1);
+
+
+		explicit basic_string( const char* input )
+			: base{ input, input + std::strlen(input)+1 }
+		{ }
+
+		explicit basic_string( std::string_view sv )
+			: base{ sv.begin(), sv.end() }
+		{ }
+
+		explicit basic_string( const base& b )
+			: base{ b }
+		{ }
+
+		explicit basic_string( base&& b )
+			: base{ std::move(b) }
+		{ }
+
+		explicit operator const base&() const & noexcept
+		{
+			return *this;
+		}
+
+		explicit operator base() const & noexcept
+		{
+			return *this;
+		}
+
+		explicit operator base() && noexcept
+		{
+			return std::move(*this);
+		}
 
 		std::size_t find( std::size_t pos, CharT c ) const
 		{
