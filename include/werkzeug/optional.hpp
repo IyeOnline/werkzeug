@@ -163,13 +163,13 @@ namespace werkzeug
 
 		constexpr auto& value() noexcept
 		{
-			assert( has_value() );
+			WERKZEUG_ASSERT( has_value(), "must hold value to access it" );
 			return yes.value_;;
 		}
 
 		constexpr const auto& value() const noexcept
 		{
-			assert( has_value() );
+			WERKZEUG_ASSERT( has_value(), "must hold value to access it" );
 			return yes.value_;
 		}
 

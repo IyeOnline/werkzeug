@@ -163,7 +163,7 @@ namespace werkzeug
 					tail->value.~T();
 				}
 				const auto prev = tail->prev;
-				assert(alloc.deallocate_single( tail ));
+				WERKZEUG_ASSERT( alloc.deallocate_single( tail ), "deallocation must succeed" );
 				tail = prev;
 			}
 			head = nullptr;

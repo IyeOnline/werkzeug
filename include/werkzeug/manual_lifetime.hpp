@@ -1,6 +1,7 @@
 #ifndef WERKZEUG_GUARD_MANUAL_LIFETIME_HPP
 #define WERKZEUG_GUARD_MANUAL_LIFETIME_HPP
 
+#include "werkzeug/assertion.hpp"
 #include <type_traits>
 #include <utility>
 #include <memory>
@@ -52,7 +53,7 @@ namespace werkzeug
 			requires is_array
 		auto& emplace_at( const std::size_t index, Args&& ... args )
 		{
-			assert( index < std::size(value) );
+			WERKZEUG_ASSERT( index < std::size(value), "index must be in range" );
 
 			return *std::construct_at( begin()+index, std::forward<Args>(args) ...  );
 		}

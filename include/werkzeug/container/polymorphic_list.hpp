@@ -45,14 +45,14 @@ namespace werkzeug
 			U value;
 
 			template<typename ... Args>
-			Node( Node_Base* prev, Node_Base* next, Args&& ... args )
-				: Node_Base{ prev, next }, value{ std::forward<Args>(args) ... }
-			{ };
+			Node( Node_Base* prev_, Node_Base* next_, Args&& ... args )
+				: Node_Base{ prev_, next_ }, value{ std::forward<Args>(args) ... }
+			{ }
 
 
-			Node( const U& value )
-				: value{ value }
-			{ };
+			Node( const U& value_ )
+				: value{ value_ }
+			{ }
 
 			Base* get_pointer() noexcept override
 			{ return &value; }
@@ -78,7 +78,7 @@ namespace werkzeug
 		node_ptr_t tail = nullptr;
 		std::size_t size_ = 0;
 
-		[[no_unique_address]] Resource resource;
+		[[no_unique_address]] Resource resource_;
 
 		static auto as_resource_pointer( auto ptr ) noexcept
 		{
@@ -89,7 +89,7 @@ namespace werkzeug
 		{
 			const auto [ size, alignment ] = source_node->get_size_align();
 
-			const auto block = resource.allocate( size, alignment );
+			const auto block = resource_.allocate( size, alignment );
 			WERKZEUG_ASSERT( block, "allocation required" );
 
 			auto* node = source_node->clone_into( block.ptr );
@@ -204,18 +204,18 @@ namespace werkzeug
 		polymorphic_list() noexcept = default;
 
 		polymorphic_list( Resource resource ) noexcept
-			: resource{ std::forward<Resource>(resource) }
+			: resource_{ std::forward<Resource>(resource) }
 		{ }
 
 		polymorphic_list( const polymorphic_list& other )
-			: size_{other.size_}, resource{ other.resource }
+			: size_{other.size_}, resource_{ other.resource_ }
 		{
 			copy_from( other );
 		}
 
 		polymorphic_list( polymorphic_list&& other ) noexcept
 			: head{ std::exchange(other.head, nullptr) }, tail{ std::exchange(other.tail,nullptr) }, size_{ std::exchange(other.size_,0) }
-			, resource{ std::forward<Resource>(resource) }
+			, resource_{ std::forward<Resource>(resource_) }
 		{ }
 
 		polymorphic_list& operator=( const polymorphic_list& other ) 
@@ -226,7 +226,7 @@ namespace werkzeug
 
 		polymorphic_list& operator=( polymorphic_list&& other ) noexcept
 		{
-			resource = std::move(other.resource);
+			resource_ = std::move(other.resource_);
 			head = std::exchange( other.head, head );
 			tail = std::exchange( other.tail, tail );
 			size_ = std::exchange( other.size_, size_ );
@@ -245,7 +245,7 @@ namespace werkzeug
 				tail->get_pointer()->~Base();
 				const auto prev = tail->prev;
 				const auto [ size, alignment ] = tail->get_size_align();
-				assert( resource.deallocate( { as_resource_pointer(tail), size }, alignment ) );
+				assert( resource_.deallocate( { as_resource_pointer(tail), size }, alignment ) );
 				tail = prev;
 			}
 			head = nullptr;
@@ -259,7 +259,7 @@ namespace werkzeug
 			requires ( std::is_base_of_v<Base,Derived> )
 		{
 			using Node_T = Node<Derived>;
-			const auto block = resource.allocate( sizeof(Node_T), alignof(Node_T) );
+			const auto block = resource_.allocate( sizeof(Node_T), alignof(Node_T) );
 			assert( block );
 
 			auto new_node = new (block.ptr) Node_T{ tail, nullptr, std::forward<Args>(args) ... };
@@ -287,7 +287,7 @@ namespace werkzeug
 			requires ( std::is_base_of_v<Base,Derived> )
 		{
 			using Node_T = Node<Derived>;
-			const auto block = resource.allocate( sizeof(Node_T), alignof(Node_T) );
+			const auto block = resource_.allocate( sizeof(Node_T), alignof(Node_T) );
 			assert( block );
 
 			auto new_node = new (block.ptr) Node_T{ nullptr, head, std::forward<Args>(args) ... };
@@ -325,7 +325,7 @@ namespace werkzeug
 			auto* insertion_point = position.ptr;
 
 			using Node_T = Node<Derived>;
-			const auto block = resource.allocate( sizeof(Node_T), alignof(Node_T) );
+			const auto block = resource_.allocate( sizeof(Node_T), alignof(Node_T) );
 			assert( block );
 
 			auto* new_node = new (block.ptr) Node_T{ nullptr, nullptr, std::forward<Args>(args) ... };

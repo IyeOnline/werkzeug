@@ -4,6 +4,7 @@
 #include <cassert>
 #include <concepts>
 
+#include "werkzeug/assertion.hpp"
 #include "werkzeug/concepts.hpp"
 #include "werkzeug/memory/concepts.hpp"
 
@@ -34,7 +35,7 @@ namespace werkzeug::memory
 		[[nodiscard]] decltype(auto) operator [] ( const std::ptrdiff_t index ) noexcept
 			requires ( not std::same_as<value_type,void> )
 		{ 
-			assert( index < size );
+			WERKZEUG_ASSERT( index < size, "index must be in range" );
 			return ptr[index]; 
 		}
 
@@ -42,7 +43,7 @@ namespace werkzeug::memory
 		[[nodiscard]] decltype(auto) operator [] ( const std::ptrdiff_t index ) const noexcept
 			requires ( not std::same_as<value_type,void> )
 		{ 
-			assert( index < size );
+			WERKZEUG_ASSERT( index < size, "index must be in range" );
 			return ptr[index];
 		}
 

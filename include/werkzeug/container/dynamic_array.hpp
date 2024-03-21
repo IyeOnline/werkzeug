@@ -3,7 +3,6 @@
 
 
 #include <compare>
-#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <type_traits>
@@ -76,7 +75,7 @@ namespace werkzeug
 			}
 			consteval static void set_in_buffer( const bool ) noexcept
 			{ 
-				
+				// intentionally empty
 			}
 			void set_size( const std::size_t new_size ) noexcept
 			{
@@ -240,9 +239,9 @@ namespace werkzeug
 					}
 					// either no resize or it wasnt successfull, so we destroy and free the old allocation.
 					destroy_range( begin(), end() );
-					assert( alloc.deallocate( block_ ) );
+					WERKZEUG_ASSERT( alloc.deallocate( block_ ), "deallocation must succeed." );
 					block_ = alloc.allocate(other.size() );
-					assert( block_.ptr != nullptr );
+					WERKZEUG_ASSERT( block_.ptr != nullptr, "new allocation must succeed" );
 				}
 				
 				transfer_range_with_fallback<transfer_type::copy, transfer_operation::construct>( other.begin(), other.end(), block_.begin() );
@@ -348,7 +347,7 @@ namespace werkzeug
 			{
 				destroy_rage(begin(),end());
 				block_ = alloc.allocate(other.size());
-				assert( block_.ptr != nullptr );
+				WERKZEUG_ASSERT( block_.ptr != nullptr, "allocation must succeed" );
 				transfer_range_with_fallback<transfer_type::move,transfer_operation::construct>( other.begin(), other.end(), block_.ptr );
 				ss.set_size( other.size() );
 				ss.set_in_buffer( false );
@@ -435,7 +434,7 @@ namespace werkzeug
 			{
 				if ( block_.ptr != nullptr )
 				{
-					assert( alloc.deallocate(block_) );
+					WERKZEUG_ASSERT( alloc.deallocate(block_), "deallocation must succeed" );
 				}
 			}
 		}
@@ -513,7 +512,7 @@ namespace werkzeug
 				else if ( is_in_buffer() )
 				{
 					auto new_block = alloc.allocate( new_capacity );
-					assert( new_block.ptr != nullptr );
+					WERKZEUG_ASSERT( new_block.ptr != nullptr, "allocation must succeed" );
 					transfer_range_with_fallback<transfer_type::move, transfer_operation::construct>( begin(), end(), new_block.begin() );
 					ss.set_in_buffer(false);
 					block_ = new_block;
@@ -528,7 +527,7 @@ namespace werkzeug
 			if ( block_.ptr == nullptr )
 			{ 
 				block_ = alloc.allocate( new_capacity ); 
-				assert( block_.ptr != nullptr );
+				WERKZEUG_ASSERT( block_.ptr != nullptr, "allocation must succeed" );
 				return capacity();
 			}
 
@@ -542,10 +541,10 @@ namespace werkzeug
 				}
 			}
 			const auto new_block = alloc.allocate( new_capacity );
-			assert( new_block.ptr != nullptr );
+			WERKZEUG_ASSERT( new_block.ptr != nullptr, "allocation must succeed" );
 			transfer_range_with_fallback<transfer_type::move, transfer_operation::construct>( block_.begin(), block_.end(), new_block.begin() );
 			destroy_range(begin(), end());
-			assert( alloc.deallocate( block_ ) );
+			WERKZEUG_ASSERT( alloc.deallocate( block_ ), "deallocation must succeed" );
 			block_ = new_block;
 
 			return capacity();
@@ -610,7 +609,8 @@ namespace werkzeug
 
 			if constexpr ( memory::concepts::has_resize<Allocator> )
 			{
-				assert( alloc.resize(block_, size()).ptr == block_.ptr );
+				const auto new_block = alloc.resize(block_, size());
+				WERKZEUG_ASSERT( new_block.ptr == block_.ptr, "shrinking resize should always succeed" );
 				return;
 			}
 			
@@ -620,16 +620,16 @@ namespace werkzeug
 				ss.set_in_buffer(true);
 				transfer_range_with_fallback<transfer_type::move,transfer_operation::construct>( old_block.begin(), old_block.begin() + this->size(), data() );
 				destroy_range( old_block.begin(), old_block.begin()+this->size() );
-				assert( alloc.deallocate(old_block));
+				WERKZEUG_ASSERT( alloc.deallocate(old_block), "deallocation must succeed" );
 				return;
 			}
 			else
 			{
 				auto new_block = alloc.allocate( size() );
-				assert( new_block.ptr != nullptr );
+				WERKZEUG_ASSERT( new_block.ptr != nullptr, "allocation must succeed" );
 				transfer_range_with_fallback<transfer_type::move,transfer_operation::construct>( begin(), end(), new_block.begin() );
 				destroy_rage( begin(),end() );
-				assert( alloc.deallocate(block_) );
+				WERKZEUG_ASSERT( alloc.deallocate(block_), "deallocation must succeed" );
 				block_ = new_block;
 				return;
 			}
@@ -690,27 +690,30 @@ namespace werkzeug
 		[[nodiscard]] std::size_t size() const noexcept
 		{ return ss.size(); }
 
+		[[nodiscard]] bool is_empty() const noexcept
+		{ return size() == 0; }
+
 		[[nodiscard]] T& front() noexcept
 		{
-			assert( size() > 0 );
+			WERKZEUG_ASSERT( not is_empty(), "accessing requires the container to not be empty" );
 			return *begin();
 		}
 
 		[[nodiscard]] const T& front() const noexcept
 		{
-			assert( size() > 0 );
+			WERKZEUG_ASSERT( not is_empty(), "accessing requires the container to not be empty" );
 			return *begin();
 		}
 
 		[[nodiscard]] T& back() noexcept
 		{
-			assert( size() > 0 );
+			WERKZEUG_ASSERT( not is_empty(), "accessing requires the container to not be empty" );
 			return *(end()-1);
 		}
 
 		[[nodiscard]] const T& back() const noexcept
 		{
-			assert( size() > 0 );
+			WERKZEUG_ASSERT( not is_empty(), "accessing requires the container to not be empty" );
 			return *(end()-1);
 		}
 
@@ -739,13 +742,13 @@ namespace werkzeug
 
 		[[nodiscard]] T& operator[]( const std::size_t idx ) noexcept
 		{
-			assert(idx < size());
+			WERKZEUG_ASSERT( not is_empty(), "accessing requires the container to not be empty" );
 			return data()[idx];
 		}
 
 		[[nodiscard]] const T& operator[]( const std::size_t idx ) const noexcept
 		{
-			assert(idx < size());
+			WERKZEUG_ASSERT( not is_empty(), "accessing requires the container to not be empty" );
 			return data()[idx];
 		}
 
@@ -800,8 +803,8 @@ namespace werkzeug
 		template<typename ... Ts>
 		T& emplace_at( iterator it, Ts&& ... args ) noexcept( nx_reserve and std::is_nothrow_constructible_v<T,Ts...> )
 		{
-			assert( it >= begin() );
-			assert( it <= end() );
+			WERKZEUG_ASSERT( it >= begin(), "target iterator must be in range" );
+			WERKZEUG_ASSERT( it <= end(), "target iterator must be in range" );
 			if ( size() == 0 or it == end() )
 			{
 				return emplace_back( std::forward<Ts>(args)... );
@@ -826,7 +829,7 @@ namespace werkzeug
 				if ( not has_resized )
 				{
 					new_block = alloc.allocate( new_capacity );
-					assert( new_block.ptr != nullptr );
+					WERKZEUG_ASSERT( new_block.ptr != nullptr, "allocation must succeed" );
 					transfer_range_with_fallback<transfer_type::move,transfer_operation::construct>( begin(), begin()+idx, new_block.begin() ); //move elemenbts before insertion to new block
 				}
 				new(std::addressof(*end())) T{ std::move(*(end()-1)) }; //move construct the last element in new block
@@ -839,7 +842,7 @@ namespace werkzeug
 				if ( not has_resized )
 				{
 					destroy_range( begin(), end() );
-					assert( alloc.deallocate(block_) );
+					WERKZEUG_ASSERT( alloc.deallocate(block_), "deallocation must succeed" );
 				}
 				block_ = new_block;
 				return ref;
@@ -890,7 +893,7 @@ namespace werkzeug
 		 */
 		[[nodiscard]] T pop_back() noexcept
 		{
-			assert( size() > 0 );
+			WERKZEUG_ASSERT( not is_empty(), "container may not be empty" );
 			T last_ = std::move( back() );
 			std::destroy_at( &(back()) );
 			ss.set_size(size()-1);
@@ -922,11 +925,11 @@ namespace werkzeug
 		 */
 		void erase( iterator begin_, const iterator end_ ) noexcept( nx_dtor && nx_swap )
 		{
-			assert( begin_ >= begin() );
-			assert( begin_ <= end() );
-			assert( end_ >= begin() );
-			assert( end_ <= end() );
-			assert( begin_ <= end_ );
+			WERKZEUG_ASSERT( begin_ >= begin(), "range must be valid" );
+			WERKZEUG_ASSERT( begin_ <= end(), "range must be valid" );
+			WERKZEUG_ASSERT( end_ >= begin(), "range must be valid" );
+			WERKZEUG_ASSERT( end_ <= end(), "range must be valid" );
+			WERKZEUG_ASSERT( begin_ <= end_, "range must be valid" );
 
 			const std::size_t erase_count = end_ - begin_;
 			const std::size_t count_after_eraseure = end_ - end();
@@ -950,7 +953,7 @@ namespace werkzeug
 		 */
 		void erase( const std::size_t idx ) noexcept(nx_dtor && nx_swap)
 		{
-			assert( idx < size() );
+			WERKZEUG_ASSERT( idx < size(), "index must be valid for the container" );
 			erase( begin()+idx, begin()+idx+1 );
 		}
 

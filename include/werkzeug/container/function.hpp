@@ -153,7 +153,7 @@ namespace werkzeug
 
 		Ret operator()(Args ... args )
 		{
-			assert( held_type != held_type_t::empty );
+			WERKZEUG_ASSERT( held_type != held_type_t::empty, "Function must hold a callable to be called" );
 			switch ( held_type )
 			{
 				case held_type_t::f_ptr :
