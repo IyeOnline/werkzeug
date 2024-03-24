@@ -63,6 +63,8 @@ namespace werkzeug
 
 		template<template<typename> class Transformer>
 		using transform = type_pack<typename Transformer<Ts>::type ... >;
+
+		using as_tuple = std::tuple<Ts...>;
 	};
 
 	namespace detail
@@ -124,6 +126,10 @@ namespace werkzeug
 
 		template<typename Transformer>
 		using transform = value_pack<Transformer{}( Vs ) ...>;
+
+		using type_pack_type = type_pack<decltype(Vs)...>;
+
+		constexpr static std::tuple as_tuple = { Vs ... };
 	};
 
 	template<typename>
