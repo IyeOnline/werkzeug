@@ -39,7 +39,7 @@ namespace werkzeug
 				{
 					blk.ptr[i].~T();
 				}
-				assert( resource_.deallocate( block_cast<resource_pointer_type>( blk ) ) );
+				assert( resource_.deallocate( block_cast<resource_pointer_type>( blk ), alignof(T) ) );
 			}
 		};
 
