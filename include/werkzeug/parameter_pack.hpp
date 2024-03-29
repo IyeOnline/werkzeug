@@ -64,6 +64,12 @@ namespace werkzeug
 		template<template<typename> class Transformer>
 		using transform = type_pack<typename Transformer<Ts>::type ... >;
 
+		template<typename F>
+		constexpr static void invoke_for_each( F&& f )
+		{
+			( f( std::type_identity<Ts>{} ), ... );
+		}
+
 		using as_tuple = std::tuple<Ts...>;
 	};
 
@@ -88,7 +94,6 @@ namespace werkzeug
 		{
 			return static_cast<unsigned char>( b );
 		}
-
 	}
 
 	template<auto ... Vs>
@@ -126,6 +131,13 @@ namespace werkzeug
 
 		template<typename Transformer>
 		using transform = value_pack<Transformer{}( Vs ) ...>;
+
+		template<typename F>
+		constexpr static void invoke_for_each( F&& f )
+		{
+			( f( std::integral_constant<decltype(Vs),Vs>{} ), ... );
+		}
+
 
 		using type_pack_type = type_pack<decltype(Vs)...>;
 
@@ -422,16 +434,6 @@ namespace werkzeug
 	template<typename ... Ts>
 	using normalized_t = typename normalized<Ts...>::type;
 
-
-	namespace detail
-	{
-		template<value_pack_c Value_Pack, std::size_t ... Indices, typename F>
-		void static_for_impl( std::integer_sequence<std::size_t, Indices...>, F&& f )
-		{
-			( f( std::integral_constant< decltype(Value_Pack::template value_at<Indices>), Value_Pack::template value_at<Indices> >{} ) , ... );
-		}
-	}
-
 	/**
 	 * @brief Invokes 'f' for every element in the pack
 	 * 
@@ -441,7 +443,7 @@ namespace werkzeug
 	template<value_pack_c Value_Pack, typename F>
 	void static_for( F&& f )
 	{
-		return detail::static_for_impl<Value_Pack>( std::make_index_sequence<Value_Pack::size>{}, std::forward<F>(f) );
+		Value_Pack::invoke_for_each( std::forward<F>(f) );
 	}
 }
 
