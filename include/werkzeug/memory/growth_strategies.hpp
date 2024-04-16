@@ -59,11 +59,11 @@ namespace werkzeug::memory::growth_strategy
 		}
 	};
 
-	using default_strategy = segregator<
-		100,
+	using default_strategy = minimum<1,
+		segregator< 100,
 			multiplicative<ratio<2, 1>{}>,
 			multiplicative<ratio<3, 2>{}>
-		>;
+		>>;
 };
 
 #endif
