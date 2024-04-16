@@ -858,18 +858,6 @@ namespace werkzeug
 		}
 
 		/**
-		 * @brief creates a new element in place from `args...` at the front of the vector
-		 * 
-		 * @param args... arguments to construct a T from
-		 * @returns reference to the newly created object
-		 */
-		template<typename ... Ts>
-		T& emplace_front( Ts&& ... args ) noexcept( nx_reserve and std::is_nothrow_constructible_v<T,Ts...> )
-		{
-			return emplace_at( begin(), std::forward<Ts>(args) ... );
-		}
-
-		/**
 		 * @brief creates a new element in place from `args...` at the back of the vector
 		 * 
 		 * @param args... arguments to construct a T from
@@ -880,12 +868,32 @@ namespace werkzeug
 		{
 			if ( size() == capacity() )
 			{
-				const std::size_t new_capacity = capacity() == 0 ? 1 : Strategy::grow(capacity());
+				const std::size_t new_capacity = Strategy::grow(capacity());
 				reserve(new_capacity);
 			}
 			auto& ref = *new (std::addressof(*end())) T( std::forward<Ts>(args) ... );
 			ss.set_size(size()+1);
 			return ref;
+		}
+
+		/**
+		 * @brief copies the given 'value' to the end of the range
+		 * 
+		 * @returns reference to the newly created object in the container
+		 */
+		T& push_back( const T& value ) noexcept( nx_reserve and std::is_nothrow_copy_constructible_v<T> )
+		{
+			return emplace_back( value );
+		}
+
+		/**
+		 * @brief moves the given 'value' to the end of the range
+		 * 
+		 * @returns reference to the newly created object in the container
+		 */
+		T& push_back( T&& value ) noexcept( nx_reserve and std::is_nothrow_move_constructible_v<T> )
+		{
+			return emplace_back( std::move(value) );
 		}
 
 		/**
