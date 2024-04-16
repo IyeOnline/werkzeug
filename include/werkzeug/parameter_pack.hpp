@@ -11,17 +11,22 @@
 
 namespace werkzeug
 {
-	template<typename ... >
-	struct type_pack;
-
+	/**
+	 * @brief type that contains a list of types
+	 * 
+	 * @tparam ...Ts the types
+	 */
 	template<typename ... Ts>
 	struct type_pack
 	{ 
+		/** @brief number of elements in this pack */
 		constexpr static std::size_t size = sizeof...(Ts);
 
+		/** @brief the type at index I */
 		template<std::size_t I>
 		using type_at = typename std::tuple_element<I, std::tuple<Ts...>>::type;
 
+		/** @brief gets the index of first occurence of type 'T' */
 		template<typename T>
 		consteval static std::size_t index_of_first() noexcept
 		{
@@ -36,6 +41,7 @@ namespace werkzeug
 			return size;
 		}
 
+		/** @brief gets the index of first occurence of type 'T' or 'size' otherwise */
 		template<typename T>
 		consteval static std::size_t unique_index_of() noexcept
 		{
@@ -55,21 +61,25 @@ namespace werkzeug
 			return last;
 		}
 
+		/** @brief checks whether the pack contains the type 'T' */
 		template<typename T>
 		consteval static bool contains() noexcept
 		{
 			return ( std::same_as<T,Ts> || ... );
 		}
 
+		/** @brief Applies the type transformer 'Transformer' to every element and returns a new pack */
 		template<template<typename> class Transformer>
 		using transform = type_pack<typename Transformer<Ts>::type ... >;
 
+		/** @brief Invokes 'f' with a 'std::type_identity<T>' for every type in the pack */
 		template<typename F>
 		constexpr static void invoke_for_each( F&& f )
 		{
 			( f( std::type_identity<Ts>{} ), ... );
 		}
 
+		/** @brief A tuple type for the types in the pack */
 		using as_tuple = std::tuple<Ts...>;
 	};
 
@@ -96,16 +106,40 @@ namespace werkzeug
 		}
 	}
 
+	/**
+	 * @brief A pack of values
+	 * 
+	 * @tparam ...Vs the values the pack holds
+	 */
 	template<auto ... Vs>
 	struct value_pack
 	{ 
+		/** @brief number of elements in this pack */
 		constexpr static std::size_t size = sizeof...(Vs);
 
+		/** @brief gets the value at index I */
 		template<std::size_t I>
 		constexpr static auto value_at = std::get<I>( std::tuple{ Vs... } );
 
+
+		/** @brief gets the index of first occurence of value 'V' */
 		template<auto V>
-		constexpr static std::size_t index_of() noexcept
+		consteval static std::size_t index_of_first() noexcept
+		{
+			constexpr bool found[size] = { ( Vs == V ) ... };
+			for ( std::size_t i = 0; i < size; ++i )
+			{
+				if ( found[i] )
+				{
+					return i;
+				}
+			}
+			return size;
+		}
+
+		/** @brief gets the index of first occurence of value 'V' or 'size' otherwise */
+		template<auto V>
+		constexpr static std::size_t unique_index_of() noexcept
 		{
 			constexpr bool found[size] = { detail::same<V,Vs>() ... };
 			std::size_t last = size;
@@ -123,32 +157,35 @@ namespace werkzeug
 			return last;
 		}
 
+		/** @brief checks whether the pack contains the value 'V' */
 		template<auto V>
-		consteval static bool contains () noexcept
+		consteval static bool contains() noexcept
 		{
 			return ( ( V == detail::cast_if_bool(Vs) ) || ... );
 		}
 
+		/** @brief Applies the transformer 'Transformer' to every element and returns a new pack */
 		template<typename Transformer>
 		using transform = value_pack<Transformer{}( Vs ) ...>;
 
+		/** @brief Invokes 'f' with a 'std::integral_constant<decltype(V),V>' for every value 'V' in the pack */
 		template<typename F>
 		constexpr static void invoke_for_each( F&& f )
 		{
 			( f( std::integral_constant<decltype(Vs),Vs>{} ), ... );
 		}
 
-
+		/** @brief gets the 'type_pack' of the values */
 		using type_pack_type = type_pack<decltype(Vs)...>;
 
+		/** @brief a tuple of the values in the pack */
 		constexpr static std::tuple as_tuple = { Vs ... };
 	};
 
-	template<typename>
-	struct is_parameter_pack
-		: std::false_type
-	{ };
 
+
+
+	/** @brief type traits to check whether a type is a 'type_pack' */
 	template<typename>
 	struct is_type_pack
 		: std::false_type
@@ -159,9 +196,11 @@ namespace werkzeug
 		: std::true_type
 	{ };
 
+	/** @brief concept to check whether a type is a parameter pack, i.e. 'type_pack' */
 	template<typename P>
 	concept type_pack_c = is_type_pack<P>::value;
 
+	/** @brief type traits to check whether a type is a 'value_pack' */
 	template<typename>
 	struct is_value_pack
 		: std::false_type
@@ -172,21 +211,30 @@ namespace werkzeug
 		: std::true_type
 	{ };
 
+	/** @brief concept to check whether a type is a parameter pack, i.e. 'value_pack' */
 	template<typename P>
 	concept value_pack_c = is_value_pack<P>::value;
 
+	/** @brief concept to check whether a type is a parameter pack, i.e. 'type_pack' or 'value_pack' */
 	template<typename P>
 	concept parameter_pack = type_pack_c<P> or value_pack_c<P>;
 
+	/** @brief type trait to check whether a type is a parameter pack, i.e. 'type_pack' or 'value_pack' */
+	template<typename P>
+	struct is_parameter_pack
+		: std::conditional_t<parameter_pack<P>, std::true_type, std::false_type>
+	{ };
+
+	/** @brief concept to check whether two types are packs and are of the same pack kind */
 	template<typename P1, typename P2>
 	concept same_pack_kind = ( type_pack_c<P1> and type_pack_c<P2> ) or ( value_pack_c<P1> and value_pack_c<P2> );
 
 
 	/**
-	* @brief type trait to get the nth type from a pack
+	* @brief type trait to get the nth type from a pack. Works on both C++ parameter packs and specializations of 'type_pack'
 	* 
 	* @tparam index The index requested
-	* @tparam Pack... the pack to index
+	* @tparam Pack... the pack to index. May be either a C++ parameter pack, or an specialization of 'type_pack'
 	*/
 	template <std::size_t index, typename... Pack>
 	struct type_at_index;
@@ -247,11 +295,12 @@ namespace werkzeug
 		: all_unique<Ts...>
 	{ };
 
+	/** @brief Helper to check if all elements in a C++ or type_pack are unique */
 	template<typename ... Ts>
 	constexpr bool all_unique_v = all_unique<Ts...>::value;
 
 
-
+	/** @brief type trait to check whether a pack includes another pack */
 	template<parameter_pack P1, parameter_pack P2>
 		requires same_pack_kind<P1,P2>
 	struct pack_includes;
@@ -274,10 +323,12 @@ namespace werkzeug
 		>
 	{ };
 
+	/** @brief Helper to check if one parmeter pack includes another */
 	template<parameter_pack P1, parameter_pack P2>
 	constexpr static bool pack_includes_v = pack_includes<P1,P2>::value;
 
 
+	/** @brief type trait to check whether a type is in a pack. Works with both C++ parameter packs and parameter pack types from this library*/
 	template<typename T0, typename ... Ts>
 	struct is_type_in_pack
 		: std::conditional_t<
@@ -296,11 +347,19 @@ namespace werkzeug
 		>
 	{ };
 
+	/** @brief Helper check whether a type is in a pack. Works with both C++ parameter packs and parameter pack types from this library */
 	template<typename T0, typename ... Ts>
 	constexpr bool is_type_in_pack_v = is_type_in_pack<T0,Ts...>::value;
 
-	template<parameter_pack P1, typename>
+
+	/** @brief type trait to append a type to a type_pack. Works with both C++ parameter packs and parameter pack types from this library */
+	template<parameter_pack P1, typename ... Ts>
 	struct append;
+
+	template<typename ... Ts1, typename ... Ts>
+	struct append<type_pack<Ts1...>, Ts...>
+		: std::type_identity<type_pack<Ts1...,Ts...>>
+	{ };
 
 	template<typename ... Ts1, typename T>
 		requires ( not type_pack_c<T> )
@@ -318,7 +377,9 @@ namespace werkzeug
 		: std::type_identity<value_pack<Vs1...,Vs2...>>
 	{ };
 
-	template<parameter_pack P1, typename ... Ts>
+	
+	/** @brief type trait to append a type to a type_pack, iff the type is not already in the pack. Works with both C++ parameter packs and parameter pack types from this library */
+	template<type_pack_c P1, typename ... Ts>
 	struct append_if_unique;
 
 	template<parameter_pack P1>
@@ -341,7 +402,7 @@ namespace werkzeug
 		: append_if_unique<P1, Ts2...>
 	{ };
 
-
+	/** @brief type trait to reduce a parmeter pack to only unique types. Works with both C++ parameter packs and parameter pack types from this library */
 	template<typename ... Ts>
 	struct reduce_to_unique;
 
@@ -373,7 +434,7 @@ namespace werkzeug
 
 	namespace detail
 	{
-		template<template<typename> class Ordering, typename ... Ts>
+		template<template<typename> class Value_Transform, typename ... Ts>
 		struct sort_pack_impl
 		{
 			using input = type_pack<Ts...>;
@@ -384,7 +445,7 @@ namespace werkzeug
 			template<std::size_t ... Is>
 			struct Impl<std::index_sequence<Is...>>
 			{
-				using O = std::common_type_t<decltype(Ordering<Ts>::value)...>;
+				using O = std::common_type_t<decltype(Value_Transform<Ts>::value)...>;
 
 				struct element
 				{ 
@@ -392,7 +453,7 @@ namespace werkzeug
 					std::size_t i;
 				};
 				constexpr static auto sorted_indices = [](){
-					std::array a{ element{ Ordering<Ts>::value, Is } ... };
+					std::array a{ element{ Value_Transform<Ts>::value, Is } ... };
 
 					std::sort( std::begin(a), std::end(a), [](const element& l, const element& r){ return l.o < r.o; } );
 
@@ -410,25 +471,35 @@ namespace werkzeug
 		{
 			using type = type_pack<>;
 		};
-
-		template<typename T>
-		struct default_ordering
-		{
-			constexpr static std::string_view value = type_traits<T>::name;
-		};
 	}
 
-	template<typename ... Ts>
-	struct normalized;
+	/** @brief type trait that sorts a parameter pack by the values produced via 'Value_Transform<Ts>' */
+	template<template<typename> class Value_Transform, typename ... Ts>
+	struct sort_pack
+		: detail::sort_pack_impl<Value_Transform, Ts...>
+	{ };
 
+	template<template<typename> class Value_Transform, typename ... Ts>
+	struct sort_pack<Value_Transform, type_pack<Ts...>>
+		: detail::sort_pack_impl<Value_Transform, Ts...>
+	{ };
+
+	/** @brief The default transform for type->value used to sort type_packs */
+	template<typename T>
+	struct default_value_transform
+	{
+		constexpr static std::string_view value = type_traits<T>::name;
+	};
+
+	/** @brief type trait that sorts a parameter pack by 'default_value_transform' */
 	template<typename ... Ts>
 	struct normalized
-		: detail::sort_pack_impl<detail::default_ordering,Ts...>
+		: detail::sort_pack_impl<default_value_transform,Ts...>
 	{ };
 
 	template<typename ... Ts>
 	struct normalized<type_pack<Ts...>>
-		: detail::sort_pack_impl<detail::default_ordering,Ts...>
+		: detail::sort_pack_impl<default_value_transform,Ts...>
 	{ };
 
 	template<typename ... Ts>

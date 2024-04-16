@@ -36,8 +36,8 @@ namespace value_pack_members_test
 	static_assert( p::value_at<2> == true );
 	static_assert( std::same_as<decltype(p::value_at<2>),const bool> );
 
-	static_assert( p::index_of<0>() == 0 );
-	static_assert( p::index_of<1>() == 1 );
+	static_assert( p::index_of_first<0>() == 0 );
+	static_assert( p::index_of_first<1>() == 1 );
 
 	static_assert( p::contains<0>() );
 	static_assert( not p::contains<2>() );
