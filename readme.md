@@ -458,7 +458,7 @@ Notable features:
 * These types can be saved to an `std::ostream` and constructed from an `std::ostream`
 * Interpolation works in N dimensions, either as lin, log or linlog interpolation.
 
-The internal data structre is as follows:
+The saving and loading works in a plain text format, layed out as such:
 ```
 Array_Nd:
 [ axis lengths ] [ data ]
