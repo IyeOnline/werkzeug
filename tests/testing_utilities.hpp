@@ -3,6 +3,7 @@
 
 
 #include <cstddef>
+#include <atomic>
 #include "werkzeug/memory/actions.hpp"
 #include "werkzeug/memory/resource.hpp"
 #include "werkzeug/memory/interfaces.hpp"
@@ -13,14 +14,14 @@
 
 struct stats_t
 {
-	std::size_t instance_counter = 0;
-	std::size_t default_ctor_counter = 0;
-	std::size_t value_ctor_counter = 0;
-	std::size_t dtor_counter = 0;
-	std::size_t copy_ctor_counter = 0;
-	std::size_t copy_assign_counter = 0;
-	std::size_t move_ctor_counter = 0;
-	std::size_t move_assign_counter = 0;
+	std::atomic<std::size_t> instance_counter = 0;
+	std::atomic<std::size_t> default_ctor_counter = 0;
+	std::atomic<std::size_t> value_ctor_counter = 0;
+	std::atomic<std::size_t> dtor_counter = 0;
+	std::atomic<std::size_t> copy_ctor_counter = 0;
+	std::atomic<std::size_t> copy_assign_counter = 0;
+	std::atomic<std::size_t> move_ctor_counter = 0;
+	std::atomic<std::size_t> move_assign_counter = 0;
 };
 
 template<typename Concrete>
@@ -49,7 +50,7 @@ struct Lifetime_Informer_CRTP
 	struct Silent_Tag
 	{};
 
-	Lifetime_Informer_CRTP( Silent_Tag ) noexcept
+	explicit Lifetime_Informer_CRTP( Silent_Tag ) noexcept
 	{}
 
 	Lifetime_Informer_CRTP() noexcept
