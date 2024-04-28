@@ -31,12 +31,16 @@ TEST_CASE("polymorphic_list")
 		REQUIRE( Base::stats().instance_counter == 1 );
 		REQUIRE( Base::stats().default_ctor_counter == 1 );
 		REQUIRE( std::begin(list)->type_id() == typeid(Base) );
+		REQUIRE( std::begin(list).is<Base>() );
+		REQUIRE( std::begin(list).as<Base*>() != nullptr );
 		REQUIRE( resource.stats().alloc_calls == 1 );
 
 		list.emplace_back<Derived_1>();
 		REQUIRE( list.size() == 2 );
 		REQUIRE( std::begin(list)->type_id() == typeid(Base) );
+		REQUIRE( std::begin(list).is<Base>() );
 		REQUIRE( (++std::begin(list))->type_id() == typeid(Derived_1) );
+		REQUIRE( (++std::begin(list)).is<Derived_1>() );
 		REQUIRE( Derived_1::stats().instance_counter == 1 );
 		REQUIRE( Derived_1::stats().default_ctor_counter == 1 );
 		REQUIRE( resource.stats().alloc_calls == 2 );
@@ -56,6 +60,8 @@ TEST_CASE("polymorphic_list")
 		REQUIRE( Derived_2::stats().instance_counter == 1 );
 		REQUIRE( Derived_2::stats().default_ctor_counter == 1 );
 		REQUIRE( std::begin(list)->type_id() == typeid(Derived_2) );
+		REQUIRE( std::begin(list).is<Derived_2>() );
+		
 
 		list.emplace_at<Derived_1>( list.begin() );
 		REQUIRE( list.size() == 2 );

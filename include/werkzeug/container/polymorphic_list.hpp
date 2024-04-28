@@ -5,6 +5,7 @@
 #include "werkzeug/memory/concepts.hpp"
 #include "werkzeug/memory/resource.hpp"
 #include "werkzeug/assertion.hpp"
+#include <type_traits>
 
 namespace werkzeug
 {
@@ -181,16 +182,48 @@ namespace werkzeug
 				return *this;
 			}
 
-			auto& operator * () const noexcept
+			auto* get() const noexcept
 			{
 				WERKZEUG_ASSERT( not is_end, "Must not dereference end iterator" );
-				return *(ptr->get_pointer());
+				return ptr->get_pointer();
+			}
+
+			auto& operator * () const noexcept
+			{
+				return *get();
 			}
 
 			auto* operator -> () const noexcept
 			{
-				WERKZEUG_ASSERT( not is_end, "Must not dereference end iterator" );
-				return ptr->get_pointer();
+				return get();
+			}
+
+
+			template<typename T>
+			bool is() const noexcept
+			{
+				return typeid(*get()) == typeid(T);
+			}
+
+			template<typename T>
+			using plain = std::remove_cvref_t<std::remove_pointer_t<T>>;
+
+			template<typename T>
+				requires ( std::derived_from<plain<T>,Base> )
+			decltype(auto) as() const noexcept( not std::is_pointer_v<T> )
+			{
+				constexpr static bool is_pointer = std::is_pointer_v<std::remove_cvref_t<T>>;
+
+				using ref_type = std::conditional_t<std::is_reference_v<T>,T, T&>;
+
+				if constexpr ( is_pointer )
+				{
+					return dynamic_cast<T>( get() );
+				}
+				else
+				{
+					return dynamic_cast<ref_type>( *get() );
+				}
 			}
 		};
 
