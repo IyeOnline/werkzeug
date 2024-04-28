@@ -1,7 +1,6 @@
 #ifndef WERKZEUG_GUARD_MEMORY_COMMON_HPP
 #define WERKZEUG_GUARD_MEMORY_COMMON_HPP
 
-#include <cassert>
 #include <concepts>
 
 #include "werkzeug/assertion.hpp"

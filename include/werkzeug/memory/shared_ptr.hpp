@@ -2,7 +2,6 @@
 #define WERKZEUG_GUARD_MEMORY_SHARED_PTR_HPP
 
 #include <atomic>
-#include <cassert>
 #include <mutex>
 #include <utility>
 

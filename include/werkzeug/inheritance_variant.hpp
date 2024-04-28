@@ -6,7 +6,6 @@
 #include <iostream>
 #include <cstddef>
 #include <new>
-#include <cassert>
 #include <concepts>
 #include <limits>
 

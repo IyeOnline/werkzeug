@@ -4,7 +4,6 @@
 #include <functional>
 #include <cstdint>
 #include <iostream>
-#include <cassert>
 #include <new>
 #include <sys/types.h>
 #include <utility>

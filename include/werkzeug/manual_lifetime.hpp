@@ -5,7 +5,6 @@
 #include <type_traits>
 #include <utility>
 #include <memory>
-#include <cassert>
 
 namespace werkzeug
 {

@@ -2,7 +2,6 @@
 #define WERKKEUG_GUARD_TYPE_ERASED_OBJECT_HPP
 
 #include "werkzeug/parameter_pack.hpp"
-#include <cassert>
 #include <compare>
 #include <concepts>
 #include <iostream>

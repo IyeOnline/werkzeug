@@ -1,7 +1,6 @@
 #ifndef WERKZEUG_GUARD_OPTIONA_HPP
 #define WERKZEUG_GUARD_OPTIONA_HPP
 
-#include <cassert>
 #include <memory>
 #include <type_traits>
 #include <utility>
