@@ -90,19 +90,19 @@ namespace werkzeug
 		struct select_overload_t
 		{
 			template<typename R>
-			constexpr auto operator()( R(*f)(Args...) )
+			consteval auto operator()( R(*f)(Args...) )
 			{
 				return f;
 			}
 
 			template<typename R, typename C>
-			constexpr auto operator()( R(C::*f)(Args...) )
+			consteval auto operator()( R(C::*f)(Args...) )
 			{
 				return f;
 			}
 
 			template<typename R, typename C>
-			constexpr auto operator()( R(C::*f)(Args...) const )
+			consteval auto operator()( R(C::*f)(Args...) const )
 			{
 				return f;
 			}
@@ -110,19 +110,19 @@ namespace werkzeug
 		template<typename R, typename ... Args>
 		struct select_overload_t<R(Args...)>
 		{
-			constexpr auto operator()( R(*f)(Args...) )
+			consteval auto operator()( R(*f)(Args...) )
 			{
 				return f;
 			}
 
 			template<typename C>
-			constexpr auto operator()( R(C::*f)(Args...) )
+			consteval auto operator()( R(C::*f)(Args...) )
 			{
 				return f;
 			}
 
 			template<typename C>
-			constexpr auto operator()( R(C::*f)(Args...) const )
+			consteval auto operator()( R(C::*f)(Args...) const )
 			{
 				return f;
 			}
@@ -135,7 +135,7 @@ namespace werkzeug
 	 * @tparam Args... Argument types
 	 */
 	template<typename ... Args>
-	detail::select_overload_t<Args...> select_overload;
+	constexpr static inline detail::select_overload_t<Args...> select_overload;
 }
 
 #endif

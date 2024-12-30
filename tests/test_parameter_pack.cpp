@@ -5,12 +5,10 @@
 
 using namespace werkzeug;
 
-
 TEST_CASE("parameter_pack")
 {
 	REQUIRE( true );
 }
-
 
 namespace type_pack_members_test
 {
@@ -25,7 +23,6 @@ namespace type_pack_members_test
 	static_assert( p::contains<int>() );
 	static_assert( not p::contains<bool>() );
 }
-
 
 namespace value_pack_members_test
 {
@@ -43,7 +40,6 @@ namespace value_pack_members_test
 	static_assert( not p::contains<2>() );
 }
 
-
 namespace is_parameter_pack_test
 {
 	static_assert( type_pack_c<type_pack<>> );
@@ -55,7 +51,6 @@ namespace is_parameter_pack_test
 	static_assert( not value_pack_c<int> );
 }
 
-
 namespace same_pack_kind_test
 {
 	static_assert( same_pack_kind<type_pack<>,type_pack<>> );
@@ -63,6 +58,11 @@ namespace same_pack_kind_test
 	static_assert( not same_pack_kind<type_pack<>,value_pack<>> );
 }
 
+namespace sub_pack_test 
+{
+	using p = type_pack<int,double,char>;
+	static_assert( std::same_as<sub_pack_t<p,1>,type_pack<double,char>> );
+}
 
 namespace all_unique_test
 {
@@ -72,7 +72,6 @@ namespace all_unique_test
 	static_assert( all_unique_v<type_pack<int,double>> );
 	static_assert( not all_unique_v<type_pack<int,int>> );
 }
-
 
 namespace pack_includes_test
 {
@@ -85,7 +84,6 @@ namespace pack_includes_test
 	static_assert( not pack_includes_v<p2,p3> );
 }
 
-
 namespace append_test
 {
 	using in = type_pack<int>;
@@ -94,7 +92,6 @@ namespace append_test
 
 	static_assert( std::same_as<out, type_pack<int,double>> );
 }
-
 
 namespace append_if_unique_test
 {
@@ -106,7 +103,6 @@ namespace append_if_unique_test
 	using out2 = append_if_unique<out,double>::type;
 	static_assert( std::same_as<out, type_pack<int,double>> );
 }
-
 
 namespace reduce_to_unique_test
 {

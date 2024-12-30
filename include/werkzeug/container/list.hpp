@@ -158,15 +158,16 @@ namespace werkzeug
 		{
 			while ( tail != nullptr )
 			{
-				if constexpr ( not std::is_trivially_destructible_v<T> )
-				{
-					tail->value.~T();
-				}
 				const auto prev = tail->prev;
+				if constexpr ( not std::is_trivially_destructible_v<node_t> )
+				{
+					tail->~node_t();
+				}
 				WERKZEUG_ASSERT( alloc.deallocate_single( tail ), "deallocation must succeed" );
 				tail = prev;
 			}
 			head = nullptr;
+			tail = nullptr;
 			size_ = 0;
 		}
 

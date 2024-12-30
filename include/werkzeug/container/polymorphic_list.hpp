@@ -50,8 +50,7 @@ namespace werkzeug
 				: Node_Base{ prev_, next_ }, value{ std::forward<Args>(args) ... }
 			{ }
 
-
-			Node( const U& value_ )
+			explicit Node( const U& value_ ) noexcept( std::is_nothrow_copy_constructible_v<U> )
 				: value{ value_ }
 			{ }
 
@@ -88,9 +87,9 @@ namespace werkzeug
 
 		node_ptr_t copy_single( node_ptr_t source_node )
 		{
-			const auto [ size, alignment ] = source_node->get_size_align();
+			const auto [ alloc_size, alloc_alignment ] = source_node->get_size_align();
 
-			const auto block = resource_.allocate( size, alignment );
+			const auto block = resource_.allocate( alloc_size, alloc_alignment );
 			WERKZEUG_ASSERT( block, "allocation required" );
 
 			auto* node = source_node->clone_into( block.ptr );
@@ -248,13 +247,14 @@ namespace werkzeug
 
 		polymorphic_list( polymorphic_list&& other ) noexcept
 			: head{ std::exchange(other.head, nullptr) }, tail{ std::exchange(other.tail,nullptr) }, size_{ std::exchange(other.size_,0) }
-			, resource_{ std::forward<Resource>(resource_) }
+			, resource_{ std::move(resource_) }
 		{ }
 
 		polymorphic_list& operator=( const polymorphic_list& other ) 
 		{
 			clear();
 			copy_from( other );
+			return *this;
 		}
 
 		polymorphic_list& operator=( polymorphic_list&& other ) noexcept
